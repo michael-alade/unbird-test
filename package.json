@@ -1,0 +1,27 @@
+{
+  "name": "unbird-test",
+  "version": "1.0.0",
+  "description": "Programming test",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michael-alade/unbird-test.git"
+  },
+  "keywords": [
+    "test"
+  ],
+  "author": "Michael Alade",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/michael-alade/unbird-test/issues"
+  },
+  "homepage": "https://github.com/michael-alade/unbird-test#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "request": "^2.87.0",
+    "request-promise-native": "^1.0.5"
+  }
+}
