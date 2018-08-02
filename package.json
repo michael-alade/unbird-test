@@ -4,6 +4,7 @@
   "description": "Programming test",
   "main": "app.js",
   "scripts": {
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -15,6 +16,9 @@
   ],
   "author": "Michael Alade",
   "license": "ISC",
+  "engines": {
+    "node": "9.11.1"
+  },
   "bugs": {
     "url": "https://github.com/michael-alade/unbird-test/issues"
   },
@@ -23,5 +27,8 @@
     "express": "^4.16.3",
     "request": "^2.87.0",
     "request-promise-native": "^1.0.5"
+  },
+  "devDependencies": {
+    "now": "^11.3.5"
   }
 }
