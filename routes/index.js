@@ -9,53 +9,90 @@ const options = {
  * getAllData
  * @desc Get the total data for the requested uri
  */
-const getAllData = async ({ uri, limit}) => {
+// const getAllData = async ({ uri, limit}) => {
+//   options.uri = uri
+//   const responseData = await request(options)
+//   const total = responseData.count
+//   const pages = Math.ceil(total / limit)
+//   let promises = []
+
+//   for (let i = 1; i <= pages; i++) {
+//     options.uri = `${uri}?page=${i}`
+//     promises.push(request(options))
+//   }
+
+//   let data = await Promise.all(promises)
+
+//   data = data.reduce((iterator, val) => {
+//     for (var i = 0; i < val.results.length; i++) iterator.push(val.results[i])
+//     return iterator
+//   }, [])
+
+//   return data
+// }
+
+const getAllData = async ({ uri, limit, type}) => {
   options.uri = uri
   const responseData = await request(options)
   const total = responseData.count
   const pages = Math.ceil(total / limit)
-  let promises = []
+  let data = []
 
   for (let i = 1; i <= pages; i++) {
     options.uri = `${uri}?page=${i}`
-    promises.push(request(options))
+    data.push(request(options).then(async data => {
+      if (type === 'planets') {
+        const planets = data.results
+        for (var planet in planets) {
+          let residentNames = [], residents = planets[planet].residents
+          for (var residentIndex in residents){
+            options.uri = residents[residentIndex]
+            const residentData = await request(options)
+            residentNames.push(residentData.name)
+          }
+          data.results[planet].residents = residentNames
+        }
+        return data
+      }
+      return data
+    }))
   }
 
-  let data = await Promise.all(promises)
-
-  data = data.reduce((iterator, val) => {
+  let results = await Promise.all(data)
+  results = results.reduce((iterator, val) => {
     for (var i = 0; i < val.results.length; i++) iterator.push(val.results[i])
     return iterator
   }, [])
 
-  return data
+  return results
 }
 
 /**
  * transformResidentLinksToName
  * @desc Transform residents links to the names of residents
  */
-const transformResidentLinksToName = async (arr) => {
-  var results = []
-  for (var dataIndex in arr) {
-    const residents = arr[dataIndex].residents
-    if (residents) {
-      let promises = residents.map(val => {
-        options.uri = val
-        return request(options)
-      })
-      let people = await Promise.all(promises)
-      people = people.reduce((iterator, person) => {
-        iterator.push(person.name)
-        return iterator
-      }, [])
-      results.push({ ...arr[dataIndex], residents: people })
-    } else {
-      results.push(arr[dataIndex])
-    }
-  }
-  return results
-}
+// const transformResidentLinksToName = async (arr) => {
+//   var results = []
+//   for (var dataIndex in arr) {
+//     const residents = arr[dataIndex].residents
+//     if (residents) {
+//       let promises = []
+//       for (var residentIndex in residents){
+//         options.uri = residents[residentIndex]
+//         promises.push(request(options))
+//       }
+//       let people = await Promise.all(promises)
+//       people = people.reduce((iterator, person) => {
+//         iterator.push(person.name)
+//         return iterator
+//       }, [])
+//       results.push({ ...arr[dataIndex], residents: people })
+//     } else {
+//       results.push(arr[dataIndex])
+//     }
+//   }
+//   return results
+// }
 
 /**
  * sortData
@@ -96,10 +133,11 @@ const people = async (req, res) => {
 const planets = async (req, res) => {
   try {
     const uri = 'https://swapi.co/api/planets'
-    const allData = await getAllData({ uri, limit: 10 })
-    let results = await transformResidentLinksToName(allData)
-    return res.status(200).json(results)
+    const allData = await getAllData({ uri, limit: 10, type: 'planets' })
+    // let results = await transformResidentLinksToName(allData)
+    return res.status(200).json(allData)
   } catch (err) {
+    console.log(err, 'err')
     return res.status(500).json({
       message: 'An error occured while processing your request',
       err
