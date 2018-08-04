@@ -1,4 +1,5 @@
 const request = require('request-promise-native')
+const _ = require('lodash')
 
 const options = {
   method: 'GET',
@@ -41,19 +42,6 @@ const getAllData = async ({ uri, limit, type}) => {
   for (let i = 1; i <= pages; i++) {
     options.uri = `${uri}?page=${i}`
     data.push(request(options).then(async data => {
-      if (type === 'planets') {
-        const planets = data.results
-        for (var planet in planets) {
-          let residentNames = [], residents = planets[planet].residents
-          for (var residentIndex in residents){
-            options.uri = residents[residentIndex]
-            const residentData = await request(options)
-            residentNames.push(residentData.name)
-          }
-          data.results[planet].residents = residentNames
-        }
-        return data
-      }
       return data
     }))
   }
@@ -133,9 +121,17 @@ const people = async (req, res) => {
 const planets = async (req, res) => {
   try {
     const uri = 'https://swapi.co/api/planets'
-    const allData = await getAllData({ uri, limit: 10, type: 'planets' })
+    const allPlanets = await getAllData({ uri, limit: 10 })
+    const people = await getAllData({ uri: 'https://swapi.co/api/people', limit: 10})
     // let results = await transformResidentLinksToName(allData)
-    return res.status(200).json(allData)
+    const results = allPlanets.map(planet => {
+      planet.residents = planet.residents.map(resident => {
+        const index = _.findIndex(people, { url: resident })
+        return people[index].name
+      })
+      return planet
+    })
+    return res.status(200).json(results)
   } catch (err) {
     console.log(err, 'err')
     return res.status(500).json({
